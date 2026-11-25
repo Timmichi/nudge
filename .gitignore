@@ -1,0 +1,49 @@
+# ---- Secrets ----
+.env
+.env.*
+*.pem
+*.p8
+*.p12
+*.mobileprovision
+
+# ---- macOS ----
+.DS_Store
+
+# ---- Swift / Xcode ----
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+timeline.xctimeline
+playground.xcworkspace
+.build/
+.swiftpm/
+Packages/
+Package.resolved.bak
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# ---- Node ----
+node_modules/
+dist/
+coverage/
+.npm/
+.pnpm-store/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---- Images over 200 KB ----
+# .gitignore cannot filter by file size. The 200 KB image limit (spec section 5 and 9)
+# is enforced by the CI image check, which gets added in Phase 1.
