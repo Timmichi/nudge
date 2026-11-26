@@ -25,17 +25,19 @@
 |---|---|
 | Friend | Someone the user keeps up with. |
 | Bubble | One thing to do for a friend. Every bubble is a nudge or a promise. |
-| Nudge | A suggestion nobody has committed to. From Nudge (catch-up or timely) or, later, from a friend. It can have a day, which means "when", never a deadline. No penalty if it passes. |
+| Nudge | A suggestion nobody has committed to. From Nudge or, later, from a friend. Two kinds: just-in-time (from something Nudge noticed; no penalty, never rerolled) and rhythm (from a friend's rhythm; can be rerolled). |
+| Pips | Five marks per friend showing how the relationship is going. |
+| Streak | Days in a row with no strike (a broken promise or a rhythm that ran out). Two strikes a month are forgiven. |
 | Promise | A bubble the user committed to. It always has a day. Only you, For a friend, or With a friend. Committing is what makes it a promise. |
 | Regular promise | A rule that makes one promise for each date it names ("Basketball, Tuesdays"). You keep the promise it made, never the rule. |
 | Rhythm | The longest the user wants to go without catching up with a friend. One per friend. |
-| Later | The strip of days after today that hold promises. |
+| Later | Every upcoming promise after today: a strip of days on Up Next and a running list by day. |
 | Note | One per day, plain text, lines can be tagged to a friend. |
 | Star | Points earned only by completing a bubble. A running count. Nothing to spend them on yet. |
 | Ghost | A friend who is not on Nudge: a soft white shape instead of an avatar. |
 | Link | The connection between a user's friend entry and that friend's own account. |
 
-Retired words: idea, reach-out, pick, move, deck. They do not appear in new code. In code a regular promise is `regular`.
+Retired words: idea, reach-out, pick, move, deck, catch-up nudge, timely nudge, kept in a row, weekly streak. They do not appear in new code. In code a regular promise is `regular`.
 
 ## Run and test
 
