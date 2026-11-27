@@ -1,6 +1,6 @@
 # Nudge rebuild: spec
 
-Status: REVIEWED by the founder on 2026-11-26 (revision 5). Open questions Q14, Q17, Q18 and Q19 cover later work or details that do not block v1. No feature code is written until the phase 0 exits in section 10 are met.
+Status: REVIEWED by the founder on 2026-11-26 (revision 5). Revision 6 (same day) writes in the founder's later decisions, each in the decision log; it has not yet been read back by the founder. Open questions Q14, Q17, Q18 and Q19 cover later work or details that do not block v1. No feature code is written until the phase 0 exits in section 10 are met.
 Final screens: `nudge-v1-final.pen` (one frame per screen, tagged FINAL, V1.1 or REFERENCE, every screen redrawn to one set of rules, with the rules every screen follows at the top). Sources: the redesign board (`nudge-ux-rethink.pen`, sections 20 to 37, kept as history), the field guide "Building a production app with AI in 2026", and a read of `nudge-ai` at `origin/main` (45ea8df4, 2026-11-23).
 
 This is the top-level spec: scope, stack, data, guardrails, build order. Each feature in section 8 later gets its own short spec (30 to 60 lines) in `specs/NNN-name/` before it is built. This file stays the source of truth; if building proves it wrong, this file changes first.
@@ -47,9 +47,11 @@ Everything outside that loop is scope that has to earn its place.
 |---|---|
 | Friend | Someone the user keeps up with. |
 | Bubble | One thing to do for a friend. Every bubble is a nudge or a promise. |
-| Nudge | A suggestion nobody has committed to. From Nudge or, later, from a friend. Two kinds from Nudge: a just-in-time nudge and a rhythm nudge. |
+| Nudge | A suggestion nobody has committed to. From Nudge, from you (your nudge), or, later, from a friend. Two kinds from Nudge: a just-in-time nudge and a rhythm nudge. |
 | Just-in-time nudge | A nudge from something Nudge noticed ("Noah is sick"). No penalty if it passes, can be dismissed, never rerolled. |
 | Rhythm nudge | The nudge that comes from a friend's rhythm. It appears before the rhythm runs out. It can be rerolled. |
+| Your nudge | A nudge you make for yourself with "Nudge me" when you want reminding but are not ready to commit. It has a day, costs nothing if skipped, and stays until you act on it. Labelled "YOUR NUDGE". |
+| Birthday nudge | A just-in-time nudge Nudge makes from a friend's birthday: a week before and on the day. |
 | Promise | A bubble the user committed to. It always has a day. Only you, For a friend, or With a friend. Committing is what makes it a promise. |
 | Regular promise | A rule that makes one promise for each date it names ("Basketball, Tuesdays"). You keep the promise it made, never the rule. |
 | Rhythm | The longest the user wants to go without catching up with a friend. One per friend. A clock that restarts whenever the user catches up with them. |
@@ -67,13 +69,13 @@ Retired words: idea, reach-out, pick, move, deck, catch-up nudge, timely nudge, 
 ## 4. Scope
 
 ### In v1 (single player, to 5 to 10 testers)
-Sign in, friends, rhythm, Up Next bubbles, nudges from Nudge, promises with a day, regular promises, Later, hold and drop, stars and streak, notes, Tell Nudge (type or speak), your avatar picked from the looks that already exist, reminders, account deletion.
+Sign in, friends, rhythm, birthdays, Up Next bubbles, nudges from Nudge, your own nudges, promises with a day, regular promises, Later, hold and drop, stars and streak, notes, Tell Nudge (type or speak), Show up now with an AI text draft, your avatar picked from the looks that already exist, reminders, account deletion.
 
 ### In v1.1 (social, after testers have used v1)
-Invite and link, ghosts turning into real avatars, nudge a friend, shared promises (For and With), groups up to six, mute.
+Invite and link, ghosts turning into real avatars, nudge a friend, shared promises (For and With), groups up to six, mute, a time of day on your nudges and promises (decided for v1.1), and sharing your own birthday with linked friends (F2).
 
 ### Later, not yet scheduled (noted so they are not lost)
-Opening the right app from a bubble (Messages with your words, the phone call or FaceTime, Maps to a place), choosing phone or FaceTime on a call, how a gift gets there, a time on a promise, and the star shop and avatar items (Q19).
+Choosing phone or FaceTime on a call, how a gift gets there, more special events beside birthdays (each an exception like birthdays, F5b), and the star shop and avatar items (Q19).
 
 ### Non-goals (not built, not stubbed)
 - Android, and a web version of the app.
@@ -82,7 +84,6 @@ Opening the right app from a bubble (Messages with your words, the phone call or
 - Shop, closet, buying stars, any payments, and any reward that stars unlock.
 - Making an avatar from a photo, and any avatar generation. This comes back as its own feature once the art style is settled.
 - Calendar view, widgets, photo moments, recap.
-- AI-written message drafts.
 - Scoring or ranking friendships.
 
 ## 5. Stack (pinned; an agent may not change these without asking)
@@ -109,11 +110,11 @@ Opening the right app from a bubble (Messages with your words, the phone call or
 - **Online for writes, cached for reads** in v1. No offline queue.
 
 ### What the AI does, sees and costs
-- **Two jobs only in v1.** (1) Tell Nudge: turn what the user typed or said into a proposed promise or note. (2) Timely nudges: read note lines that are tagged to a friend and propose a nudge when one is worth acting on.
+- **Three jobs only in v1.** (1) Tell Nudge: turn what the user typed or said into a proposed promise, your nudge, or note. (2) Timely nudges: read note lines that are tagged to a friend and propose a nudge when one is worth acting on. (3) Text drafts: on the Show up now sheet of a Text bubble, draft a short message the user edits before sending. Nothing is ever sent for the user.
 - **It proposes, the user decides.** Nothing the AI produces is saved as a promise or changes a note without a tap from the user. Nudges are suggestions already, so they need no confirmation.
-- **What it is sent:** the Tell Nudge text, the user's friend names, and note lines tagged to a friend. Note lines with no friend tag are never sent to the AI.
+- **What it is sent:** the Tell Nudge text, the user's friend names, note lines tagged to a friend, and for a text draft the bubble's what and details. Note lines with no friend tag are never sent to the AI.
 - **Where the key lives:** the Anthropic key is a secret on the server. The phone calls our API; our API calls Anthropic. A key inside the app could be pulled out of the app file and used to spend our money.
-- **Per-user daily cap:** each user gets a fixed number of AI calls a day (40 today). After that Tell Nudge still works but saves plain text as a note. This stops one user or one bug from running up the bill.
+- **Per-user daily cap:** each user gets a fixed number of AI calls a day (40 today). After that Tell Nudge still works but saves plain text as a note, and the Text sheet shows your details with no draft. This stops one user or one bug from running up the bill.
 - **Monthly cap:** a ceiling on calls for the whole app (20,000 today). At the cap, AI features switch off for everyone and the rest of the app keeps working. This is the worst-case bill, chosen in advance.
 - **Every call is logged** with its purpose and cost, so the caps are set from real numbers.
 
@@ -122,8 +123,8 @@ Opening the right app from a bubble (Messages with your words, the phone call or
 | Table | Holds |
 |---|---|
 | `user` | Account, time zone, chosen look, celebration choice. |
-| `friend` | Owner, name, rhythm in days, last caught up date, pips (1 to 5, current), optional contact handle. |
-| `bubble` | Owner, friend, kind (`nudge` or `promise`), nudge type (`rhythm` or `just_in_time`), text, details, counts as (`text`, `call`, `think_of_them`, `play`, `give`, `help`, `meet_up`), day (required for a promise, optional for a nudge), state (`open`, `done`, `dismissed`, `missed`), source, regular it came from. |
+| `friend` | Owner, name, rhythm in days, last caught up date, pips (1 to 5, current), optional contact handle, birthday (month and day, optional year), birthday nudges on or off (on by default). |
+| `bubble` | Owner, friend, kind (`nudge` or `promise`), nudge type (`rhythm`, `just_in_time`, `birthday` or `yours`), text, details, counts as (`text`, `call`, `think_of_them`, `play`, `give`, `help`, `meet_up`), day (required for a promise, optional for a nudge), state (`open`, `done`, `dismissed`, `missed`), source, regular it came from. |
 | `regular` | Owner, friend, text, counts as, pattern (weekly on a weekday, every N weeks, monthly on a date), starts on, ended on. |
 | `note` | Owner, date (unique per user per day), title, body. |
 | `note_tag` | Note, line range, friend, confirmed or suggested. |
@@ -160,9 +161,9 @@ REST and JSON under `/v1`. Every route requires a signed-in user and checks owne
 - `GET /me`, `PATCH /me`, `DELETE /me`
 - `GET /friends`, `POST /friends`, `GET /friends/:id`, `PATCH /friends/:id`, `DELETE /friends/:id`
 - `GET /up-next?date=`, `GET /later`
-- `POST /bubbles`, `PATCH /bubbles/:id`, `POST /bubbles/:id/done`, `POST /bubbles/:id/dismiss`, `POST /bubbles/:id/promise`
+- `POST /bubbles`, `PATCH /bubbles/:id`, `POST /bubbles/:id/done`, `POST /bubbles/:id/dismiss`, `POST /bubbles/:id/promise`, `POST /bubbles/:id/draft` (Text only: returns an AI draft, saves nothing)
 - `GET /notes?from=&to=`, `PUT /notes/:date`
-- `POST /tell` (text in, proposed promise or note out; nothing saved until confirmed)
+- `POST /tell` (text in, proposed promise, your nudge or note out; nothing saved until confirmed)
 - `POST /devices`
 - `GET /regulars`, `POST /regulars`, `PATCH /regulars/:id`, `POST /regulars/:id/end`, `POST /regulars/:id/skip`
 - `GET /looks`
@@ -185,16 +186,18 @@ Product rules below come from the board. The numbers that do not (time limits, f
 - "Who needs you" order, in three quiet groups with small headers and counts, no row fill (layout A, section 34): Needs you (rhythm overdue, longest first; then rhythm runs out tonight; then anyone at 1 or 2 pips), then This week (anything due in the next 7 days, soonest first), then Everyone else (fewest pips first, then longest since caught up). A promise more than 7 days away does not move a friend up. Each row shows the pips and one status line.
 - The list always opens on "Who needs you"; the last sort picked is not remembered. When the first two groups are empty, the list shows one line ("You're caught up with everyone.") and then everyone.
 - Changing rhythm from the ⋯ menu changes when the next rhythm nudge is due, covered by rule tests.
+- A friend can have a birthday: month and day, and an optional year so the app can say how old they turn. It comes from the contact picked when adding the friend (the contact picker hands over that one contact and nothing else), or the user types it. Birthday nudges (F5b) are on by default, with one switch in Settings and one on each friend's page.
+- In v1.1, linked friends can share their own birthday: one skippable sign-up step (month, day, optional year). Month and day are seen by linked friends unless switched off; the year has its own switch (proposed). A shared birthday fills the friend's entry and stays up to date; if the user typed a different date, they are asked once which to keep; turning sharing off removes it unless the user typed it themselves.
 
 **F3 Up Next**
 - The header has the date on its own line, then the title on a row with the streak chip, the stars chip and settings, centred on the title (header fix 1, section 36). The chips never overlap the date or the title: stars of 10,000 or more show as "12.4k", and the layout is checked at a 365-day streak and 12.4k stars.
 - The background (gradient and backdrop circles) is one layer behind the whole screen, header and bottom bar included. No section clips it, so nothing stops at a hard line.
 - With 4 or fewer open bubbles for today, they sit in a still cluster with the most important in the middle.
-- With 5 or more, four are in view and the next one peeks in half off the right edge (once scrolled, the one behind peeks in on the left). Sideways scrolling is free and weightless, with momentum and soft ends: no wrapping, no page ticks, one soft bump at each end. No dot strip. Until someone has scrolled once, the peeking bubble nudges in every few seconds and a "6 more ›" pill sits under the bubbles. A back-to-the-start button shows only at the end. Until someone has done one hold-and-drop, a hint sits under the header: "Hold a bubble and drag it to an action". Frames: `UpNext/default`, `UpNext/many`.
+- With 5 or more, four are in view and the next one peeks in half off the right edge (once scrolled, the one behind peeks in on the left). Sideways scrolling is free and weightless, with momentum and soft ends: no wrapping, no page ticks, one soft bump at each end. Starting numbers from the prototype: 55 pt of finger travel per bubble; landing on a bubble is a spring of 0.2 s, damping 0.7. No dot strip. Until someone has scrolled once, the peeking bubble nudges in every few seconds and a "6 more ›" pill sits under the bubbles; every few seconds its glass stretches to read "Swipe to see 6 more" and shrinks back (frame `UpNext/many · hint stretched`). A back-to-the-start button shows only at the end. Until someone has done one hold-and-drop, a hint sits under the header: "Hold a bubble and drag it to an action". Frames: `UpNext/default`, `UpNext/many`.
 - Bubbles move with soft physics: they drift toward their place, push each other gently apart, and when one leaves, each of the rest takes the nearest open spot (the most important still goes to the middle).
 - Order comes from the server. Given the same data, the order is identical on every load (rule test with 20 fixtures).
 - The cluster holds 60 fps or better with 10 bubbles on an iPhone 15, measured in a release build.
-- Up Next shows only things for today. All clear means nothing is left for today; rhythm nudges sent to tomorrow with Not today do not block it.
+- Up Next shows only things for today. All clear means nothing is left for today; rhythm nudges and your nudges sent to tomorrow with Not today do not block it.
 - When the last open bubble of the day is done, the all-clear moment plays once that day (frame `UpNext/all-clear-moment`). After that, Up Next shows the quiet all-clear state (`UpNext/all-clear`) until local midnight, including when the app is reopened. A new bubble arriving the same day replaces the quiet state; the moment does not play again that day.
 - The all-clear moment, in starting numbers to tune in the motion prototype:
   - Bloom (0 to 1.2 s): the friends done today rise in their own bubbles; small bubbles pop into stars.
@@ -216,6 +219,7 @@ Product rules below come from the board. The numbers that do not (time limits, f
 - A promise for a later day shows in the Later strip and not in today's bubbles; on its day it becomes a bubble whose only mark is the maroon time-left ring (F7); the bubble itself has no rim.
 - Later lists every upcoming promise as one running list grouped by day, with no week sections. A regular promise shows only its next date.
 - Before its day a promise can be moved, edited or called off as often as the user likes, for free. On its day its what, day and counts-as are locked; details and contact stay editable. "I can't make it" on its day counts as broken.
+- Before its day a promise's menu also offers "Make it a nudge instead": it becomes your nudge for the same day, for free. On its day this is gone.
 - Marking it kept awards stars once. A second tap awards nothing.
 - If its day ends still open, it becomes `missed` at the user's local midnight. That is a broken promise: one pip off for that friend and one streak strike (F7). It then comes back as a nudge labelled with the day it was promised ("NUDGE · WAS PROMISED TUE"), so it can still be done or promised again; the strike stands.
 - A promise made at least one day before its day and kept earns 50% bonus stars, shown as "Kept your word". A promise made on its own day earns the normal stars.
@@ -229,7 +233,7 @@ Product rules below come from the board. The numbers that do not (time limits, f
 - A rhythm nudge can be rerolled: Nudge suggests a different idea for the same catch-up. Just-in-time nudges are never rerolled.
 - Reroll is a dice button on the idea in the sheet, showing how many are left (3 per nudge). It opens a menu of ways to reroll (like this, from what Nudge knows, surprise, a challenge) and Tell Nudge what you want. A reroll replaces what, details and counts-as together; the day stays.
 - A just-in-time nudge has no penalty if it passes and can be dismissed.
-- At most one open nudge per friend at any time.
+- At most one open nudge from Nudge per friend at any time. Birthday nudges are the exception (F5b), and your own nudges never count toward it.
 - A dismissed nudge is never recreated with the same text for that friend within 30 days.
 - A just-in-time nudge can have a day. Its label shows it ("NUDGE · THU"). At the end of that day an untouched nudge leaves quietly: no miss, no effect on any streak.
 - Dropping a nudge that has a day onto Promise fills that day in on the promise sheet.
@@ -238,25 +242,42 @@ Product rules below come from the board. The numbers that do not (time limits, f
 - Nudge fills in counts-as from the what, and fills it in again whenever the what changes, until the user picks a kind; from then on it stays. While Nudge is reading, the line shows "Counts as ···"; before anything is written there is no line. Tapping the kind on the kind line opens a menu of the seven kinds with their stars and a check on the current one; picking one changes only the kind. "Make it a…" in the reroll menu opens the same seven as a submenu and rerolls the idea into the kind picked.
 - The Later strip holds promises only. A nudge with a day floats in Up Next from the moment it exists, so Nudge creates its own dated nudges no more than 2 days ahead.
 
+**F5a Your nudges**
+- The sheet has two buttons: Promise (main) and Nudge me. Nudge me saves your nudge: a nudge from you that nobody has committed to. Tell Nudge makes one when the user says "remind me", "sometime" or "should"; its confirm card shows both buttons with its guess as the main one.
+- Your nudge needs a friend and a day (quick picks: Tomorrow, This weekend, Next week, In a month, Pick a day). The what can be vague ("plan something for his birthday"). Counts as is filled in as for any nudge. No time of day in v1; it comes in v1.1.
+- Before its day it shows in the Later list, lighter than promises, and in the evening-before review (F11). The Later strip stays promises only. It does not move a friend up in Friends.
+- On its day it is a bubble labelled "YOUR NUDGE" with no time-left ring. Hold and drop: Promise, Did it, Not today (back tomorrow). The tap menu adds Pick another day, Edit and Let it go.
+- Did it earns the kind's stars and counts as catching up, like any bubble. Promise turns it into a promise, and the promise rules apply from then on, including the Kept your word bonus.
+- If its day ends untouched, nothing is missed: it stays, labelled "YOUR NUDGE · SINCE TUE". After three days untouched it asks once, "Still want this?", with Keep, Pick a day and Let it go. If that is ignored too, it goes away quietly on day 7, at no cost, and stays in that friend's history as a faint line ("Your nudge · let go · Dec 3").
+- It never hides a rhythm nudge; only a promise does, because only a promise is a commitment.
+- The first few times the promise sheet opens, a one-time tip reads "Not sure yet? Nudge me: no streak, no pressure." An empty Later says "Nothing coming up. Want a nudge about someone?"
+
+**F5b Birthday nudges**
+- With a birthday on a friend and birthday nudges on, Nudge makes two just-in-time nudges: 7 days before ("Noah's birthday is Saturday. Plan something?") and on the day ("It's Noah's birthday. Text him?", counts as Text). With a year, the words can say the age ("Noah turns 30").
+- Neither costs anything if it passes. Birthday nudges are the exception to one open nudge from Nudge per friend: they show beside a rhythm nudge for the same friend, and doing either restarts the rhythm and removes the rhythm nudge. Other special events may join this exception later, each decided on its own.
+
 **F6 Hold and drop**
-- A press lifts a bubble as soon as the finger moves or after a moment held still; releasing before that is a tap. Holding shows the friend large and still (only their expression changes), the other bubbles shrink, fade and rise, and the top reads "Drag onto an action". The actions are pills only, with no outline on the body and nothing drawn at the feet:
-  - a nudge: Promise on the chest, Did it at the feet, Dismiss on the left edge (Not today for a rhythm nudge, and nothing there on its due day);
-  - a promise: Show up now on the chest, Already showed up at the feet, Call it off on the left edge.
+- Holding a bubble still for 0.2 s lifts it, with a haptic; moving before that scrolls, and letting go before that is a tap. Holding shows the friend large and still (only their expression changes), the other bubbles shrink, fade and rise, and the top reads "Drag onto an action". The actions are pills only, with no outline on the body and nothing drawn at the feet:
+  - a nudge: Did it high on the right beside the friend's head, Promise lower on the right beside their chest with clear space between, Dismiss on the left edge at head height (Not today for a rhythm nudge or your nudge, and nothing there on a rhythm nudge's due day);
+  - a promise: Already showed up high on the right, Show up now lower on the right, Call it off on the left edge.
+  Nothing covers the friend's face or feet (layout B), and nothing sits low on the right, where a right thumb holding the bubble covers it.
   Frames: `UpNext/holding`, `UpNext/holding-promise`, `UpNext/hold-rhythm`, `UpNext/hold-rhythm-due`.
 - Over an action, its pill jumps up into the top bar ("Let go: promise", magenta) and leaves a ghost outline where it was; the others dim. Setting aside (Call it off, Dismiss, Not today) goes dark instead of magenta, and Call it off on a promise's day reads "counts as broken". The held bubble shrinks behind the pills so the words stay readable. Frames: `UpNext/holding-over`, `UpNext/holding-call-off`.
-- If a bubble lifts already on an action, nothing happens until it stays there 0.6 s, silently; then the action is live as normal.
+- If a bubble lifts already on an action, nothing happens until it stays there 0.3 s, silently; then the action is live as normal.
 - Dropping on Promise opens the promise sheet with the text filled in.
-- Tapping a bubble opens a menu beside it (the bubble stays bright, the rest dim) with the same actions plus Edit; Edit opens the sheet, which has Save and Cancel and no action buttons. This is also the non-drag way for VoiceOver (frame `UpNext/menu`). A nudge's sheet has no "Promise it" row: its day row only adds, changes or clears the optional day, and the nudge stays a nudge.
+- Dropping a promise on Show up now opens one sheet whose buttons change with the kind (the Show up now group of the final screens): Text has an AI draft to edit or reroll and opens Messages with it; Call starts the call; Help and Meet up offer directions when a place is set; Think of them, Play and Give finish with one button. Nothing is sent for the user. Coming back to Nudge afterwards shows the welcome-back sheet, which asks how it went: "We talked" (in the kind's words) finishes it, "Didn't reach him" keeps it open for later today, "Not yet" just closes.
+- A nudge can also be done right away without promising, through Show up now in two places: first in its tap menu (frame `UpNext/menu-nudge`), and as "Show up now instead" on the promise sheet that opens when a nudge is dropped on Promise (frame `Sheet/promise-from-drop`). It opens the same Show up now sheet and welcome-back sheet as a promise; coming back, the kind's done words count as Did it, and "Not yet" leaves it a nudge with nothing at stake. It is not a drag pill: the three pill spots keep one meaning each (done, next step, set aside), and a fourth pill would have to sit low on the left.
+- Tapping a bubble opens a menu beside it (the bubble stays bright, the rest dim) with the same actions plus Edit (for a nudge, Show up now first); Edit opens the sheet, which has Save and Cancel and no action buttons. This is also the non-drag way for VoiceOver (frame `UpNext/menu`). A nudge's sheet has no "Promise it" row: its day row only adds, changes or clears the optional day, and the nudge stays a nudge.
 
 **F7 Stars and streak**
-- Text 5, call 20, think of them 10, play 20, give 20, help 40, meet up 40. Stars once per friend a day: if two things are done for the same friend, the bigger one earns. At most 100 stars a day. Past either limit the thing still counts for pips, rhythm and streak, and the screen says so in words ("No stars today · still counts", "Counts for Noah · stars full today"), never a bare zero. The stars sheet (tap the stars chip) shows today against the 100 and how stars work.
+- Text 5, call 20, think of them 10, play 20, give 20, help 40, meet up 40. Stars once per friend a day: if two things are done for the same friend, the bigger one earns. At most 400 stars a week, Monday to Sunday in the user's time zone. Past either limit the thing still counts for pips, rhythm and streak, and the screen says so in words ("No stars today · still counts" for the friend limit, "Full week · still counts" for the weekly one), never a bare zero. The stars sheet (tap the stars chip) shows a quiet bar for this week against the 400 and how stars work. Reaching 400 plays a small "Full week ★" moment once that week, so the limit reads as a win, not a wall.
 - Stars come only from completing a bubble. No other action awards them.
 - A promise made at least one day ahead and kept earns 50% bonus stars (F4).
 - The streak counts days in a row with no strike. Days with nothing due count. A strike is a broken promise or a friend's rhythm running out with nothing done.
 - The first two strikes in a calendar month are forgiven; the third resets the streak to 0. The two passes come back on the 1st of each month.
 - Each friend has five pips. A broken promise takes one off. Earning one back takes three kept promises with that friend on three separate days. A new friend starts at 3. A nudge done for that friend also counts as one of the three days.
 - On Up Next, a ring around a bubble means time left today, and only bubbles that cost a strike tonight have one: a promise for today and a rhythm nudge on its due day. Their label starts with an hourglass. In the evening the label shows the hours left ("3 H LEFT"). Pips mean the relationship. Faces carry no progress ring.
-- The streak shows as a flame chip in the Up Next header with one shield holding the number of passes left this month (blue with 2 or 1, grey with 0). The flame's colour marks the milestone: orange up to 29 days, gold from 30, violet from 100. A calendar month with no pass used gets a gold halo. The flame is always gently alive: a soft glow and a slow, small flicker. After 6pm, while something that costs a strike tonight is still open, the flame and the streak number pulse, slowly fading out and back in, and stop as soon as it's done. With Reduce Motion on nothing moves; the flame turns orange-red instead. The star in the stars chip has no white outline; it glows, with its rainbow slowly shifting. The hourglass is only on bubbles, never on the chip. Tapping the chip opens the streak sheet: the month, passes left and when they reset, best streak, next milestone.
+- The streak shows as a flame chip in the Up Next header with one shield holding the number of passes left this month (blue with 2 or 1, grey with 0). The flame's colour marks the milestone: orange up to 29 days, gold from 30, violet from 100 (the gold is checked against the star on the flame and star sheet; if they look alike, 30 days becomes a hotter orange with a white centre). A calendar month with no pass used shows the perfect-month flame: the same flame with slightly more embers lifting off it, no colour change and no halo. The flame is always gently alive: a soft glow and a slow, small flicker. After 6pm, while something that costs a strike tonight is still open, the flame and the streak number pulse, slowly fading out and back in, and stop as soon as it's done. With Reduce Motion on nothing moves; the flame turns orange-red instead. The star in the stars chip has no white outline; it glows, with its rainbow slowly shifting. The hourglass is only on bubbles, never on the chip. Tapping the chip opens the streak sheet: the month, passes left and when they reset, best streak, next milestone.
 - In v1 a lost streak starts again from 0. Winning it back is v1.1 (F18): a lost streak can be won back within 3 days, in two steps: keep a promise with each friend whose strike broke it that night (strikes earlier in the month were covered by passes and do not count), then pay with stars to restore it (the price is still open, Q17). Never with money. A won-back day has its own mark in the streak calendar, and a month with one is not a perfect month.
 - The streak-lost sheet comes up once, over Up Next, on the first open after the midnight it broke. In v1 it says what happened, keeps the best streak, and offers Start again. (In v1.1 the win-back offer then lives on the streak chip for 3 days.)
 - Keeping a promise made at least a day ahead plays a second beat after the done moment: its own gold "Kept your word" pill, a bigger gold star burst, the avatar jumps, a second haptic, then the bonus settles into the star count.
@@ -269,7 +290,7 @@ Product rules below come from the board. The numbers that do not (time limits, f
 - A friend's page lists every line tagged to them across all days, newest first.
 
 **F9 Tell Nudge**
-- Typing or speaking one clear thing ("dinner with Noah Saturday") creates one proposed promise that the user confirms with one tap.
+- Typing or speaking one clear thing ("dinner with Noah Saturday") creates one proposed promise that the user confirms with one tap. "Remind me", "sometime" or "should" proposes your nudge instead (F5a); the card always offers both Promise and Nudge me.
 - Several things in one message produce one review card listing each item. Nothing is saved until confirmed.
 - If the AI call fails or the daily cap is reached, the text is kept and the user sees "Saved as a note for now".
 
@@ -279,7 +300,7 @@ Product rules below come from the board. The numbers that do not (time limits, f
 - Friends who are not linked show the ghost.
 
 **F11 Reminders**
-- The evening before, one notification lists tomorrow's promises so the user can review them while moving or calling off is still free.
+- The evening before, one notification lists tomorrow's promises and your nudges so the user can review them while moving or calling off is still free.
 - On the day, one notification at 6pm only if something that costs a strike tonight is still open. No other reminders: never more than two notifications a day.
 - Settings › Notifications gives each reminder its own switch and time. Defaults: the evening-before review at 8pm, the still-open one at 6pm. Turning Nudge off entirely, sounds and banners stay in iOS Settings; the app registers its own notification settings page so iOS Settings links to it.
 - Wording is person first: the title names the friend and the thing and fits on one line, because iOS cuts a longer title off; the stakes go in the body; at most one emoji, for the activity; the friend's face as the picture on the right. The streak is not the lead.
@@ -443,11 +464,13 @@ Each needs your decision. Nothing here is decided by an agent.
 
 **Q14. The later avatar style.** Decision: OPEN. You named B1 and B1.1; I could not find a sheet with those labels, so point me to it when we get to that feature.
 
-**Q17. What is left from sections 33 to 36.** Decision: OPEN. (c) the broken-promise pill shows once on the first open after midnight and leaves after 6 seconds or a tap; (d) the win-back price in stars (300 drawn); (f) the rules for a several-day promise: locked from its first day, broken if not done by midnight after its last day, stars for each day together up to 7 (proposed); (g) the Did it drop uses the kind's words ("We talked", "He has it"). (i) Show up now: founder direction (2026-11-26) is that it opens a sheet that encourages you to text, call, or go and do the thing, and to come back to the app when you're done; the design is being explored, and this pulls opening Messages, the phone and Maps from the later list into v1; (j) expression art for the held friend (hopeful, glad, let down).
+**Q17. What is left from sections 33 to 36.** Decision: OPEN. (c) the broken-promise pill shows once on the first open after midnight and leaves after 6 seconds or a tap; (d) the win-back price in stars (300 drawn); (f) the rules for a several-day promise: locked from its first day, broken if not done by midnight after its last day, stars for each day together up to 7 (proposed); (g) the Did it drop uses the kind's words ("We talked", "He has it"). (i) Show up now: founder direction (2026-11-26) is that it opens a sheet that encourages you to text, call, or go and do the thing, and to come back to the app when you're done; picked 2026-11-26: one sheet for each of the seven kinds plus the welcome-back sheet (C), in the final screens' Show up now group; this pulls opening Messages, the phone and Maps from the later list into v1; (j) expression art for the held friend (hopeful, glad, let down).
 
 **Q18. How Nudge makes money.** Decision: OPEN. Founder direction (2026-11-26): free to use and useful for free; paid for things people understand as extra, such as special avatars, notes and AI memory kept past 30 days, and more AI use. Needs: what is free, what is paid, the price, and what the app does when the free AI is used up (today: Tell Nudge saves plain text as a note after the daily cap).
 
 **Q19. Stars: prices and what they buy (v1.1 and later).** Decision: OPEN. The limits are decided (F7). Proposal for later: stars buy only things that cost Nudge nothing per use (avatar items drawn once, the streak restore); anything with a real cost each time (a new AI avatar, more AI) is money, never stars; colours stay free; worn items 300, held props 600, streak restore 300, seasonal 1,000 to 1,500; emotes earned by the friendship, not bought. Avatar items use way 2 (each item drawn once per pose and placed on the avatar), the founder's pick; a throwaway test app, built after phase 0 and capped at 2 to 3 days (founder OK, 2026-11-26), proves whether it looks good before the shop is specced: 6 avatars, 4 poses, 5 items, passing if about 80% of combinations look right without hand fixes.
+
+**Q20. How ignored nudges end and interact.** Decision: OPEN (found 2026-11-26). (a) When a just-in-time nudge and a rhythm nudge for the same friend would both be open, which shows? Proposed: one bubble, with the rhythm nudge's label and due day and the just-in-time idea, like a free reroll. (b) The nudge a broken promise comes back as ("NUDGE · WAS PROMISED TUE") has no kind or end. Proposed: it behaves like your nudge (it was your promise): no new cost, "Still want this?" on day 3, gone on day 7, outside the one-from-Nudge limit. (c) Does Not today on your nudge restart its 3- and 7-day count? Proposed: no; only Pick another day starts it over, so a nudge can't be pushed forever. (d) History shows what you did, your promises, your let-go nudges and rhythms that ran out, but not passed or dismissed nudges from Nudge (proposed). (e) Tell Nudge: a firm day makes Promise the main button, anything else Nudge me; the Nudge me tip shows once when someone backs out of the promise sheet (proposed).
 
 ## 14. Decision log
 
@@ -476,3 +499,9 @@ Each needs your decision. Nothing here is decided by an agent.
 | 2026-11-26 | From the motion prototype: four bubbles in view with a fifth peeking, free scrolling with soft ends and no dots, soft physics with least-movement refills. Hold and drop is pills only (no body outline, nothing at the feet), different actions for a promise (Show up now, Already showed up, Call it off) and a nudge, the hovered action jumps to the top with a ghost, a 0.6 s silent hold when lifting on an action, and tap opens a menu beside the bubble. | Founder, in conversation: "Let's go with jumps up", "the holding to keep should exist … 0.6 seconds", "I like the tap B", "just stick with the pill, no circle, no thing on the bottom". |
 | 2026-11-26 | Show up now opens a sheet that sends you to text, call or go do it, and welcomes you back. A one-time hold-and-drag hint for new users. After 6pm the flame and streak number pulse instead of flickering; the flame always glows gently; the star loses its white outline and glows. | Founder: "it should open a tab for you and encourage u to either text or call or go and do the thing and come back", "sure on c", "after 6pm the flame + streak number should pulse fading in and out". |
 | 2026-11-25 | A nudge can have an optional day. Committing, not the day, is what makes a promise. Nudges from Nudge, nudges from a friend and promises share one sheet and one set of fields. | Founder pushed back on "a nudge never has a day"; I agree and withdrew it. |
+| 2026-11-26 | Hold still 0.2 s to lift (moving sooner scrolls, letting go sooner taps); 0.3 s on an action before it is live; 55 pt of finger travel per bubble; landing spring 0.2 s, damping 0.7. The "N more" pill stretches into "Swipe to see N more". | Founder, tuned on the phone: "hold before it lifts should be 0.2 seconds so it doesnt feel heavy", "Finger travel per bubble: 55 points", "Settle speed: 0.20 seconds", "Settle bounce: 0.70". |
+| 2026-11-26 | Holding layout B: the actions sit beside the friend on the right, never on the face. Show up now: the seven kinds plus the welcome-back sheet. AI text drafts move into v1 (out of the non-goals). | Founder: "I think B is the best, for sure", "Yes, text can draft messages with AI. I think we should allow that option", "I'm aligned on everything else". |
+| 2026-11-26 | Your own nudges: a "Nudge me" button and a "YOUR NUDGE" label; a time of day comes in v1.1. Stars: at most 400 a week from Monday, still once per friend a day, with a "Full week" moment. Perfect month: slightly more embers, no gold halo. | Founder: "there should be a Nudge Me button. There should be a Your Nudge label, and we can do time later in 1.1, but we should definitely do it", "400 a week, starting fresh every Monday", "The perfect month should be just slightly more embers". The Full week moment was my proposal, accepted with "aligned on everything else". |
+| 2026-11-26 | Birthdays: on the friend (month, day, optional year), from the contact or typed; birthday nudges on by default, a week before and on the day; they show beside a rhythm nudge for the same friend, the one exception to one nudge per friend. Sharing your own birthday is v1.1. | Founder: "I'm for the birthday design", "birthday nudges should be automatically enabled", "Optional is fine for that", "Agreed on showing both … birthdays and maybe special events are an exception to that rule". |
+| 2026-11-26 | Holding: Did it (Already showed up on a promise) moves high on the right beside the head, Promise (Show up now) lower on the right, with clear space between. Picked 2026-11-26 (Did it on top, Claude's recommendation). | Founder: "if I'm a right-hand user and I hold onto the bubble, the Didit is hidden behind my thumb … I need it to be on the right-hand side but above Promise, or actually, maybe Promise is above Didit still. I'm not sure which one is better". |
+| 2026-11-26 | Did it above Promise on the right is picked. A nudge gets Show up now first in its tap menu and "Show up now instead" on the promise sheet, with no fourth drag pill (research: hidden gestures are found far less than visible options; doing it now beats planning it). Your nudge, ignored after "Still want this?", goes away quietly on day 7 and stays as a faint line in the friend's history. | Founder: "Sounds good for all of them … go with the recommended. Let's not overengineer anything for the ignored Nudge, quietly going away on day 7. It should show up in the friends history." |
