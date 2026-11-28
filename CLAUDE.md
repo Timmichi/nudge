@@ -25,19 +25,21 @@
 |---|---|
 | Friend | Someone the user keeps up with. |
 | Bubble | One thing to do for a friend. Every bubble is a nudge or a promise. |
-| Nudge | A suggestion nobody has committed to. From Nudge or, later, from a friend. Two kinds: just-in-time (from something Nudge noticed; no penalty, never rerolled) and rhythm (from a friend's rhythm; can be rerolled). |
+| Nudge | A suggestion nobody has committed to. Only from Nudge or, later, from a friend; you don't make nudges for yourself. Two kinds: just-in-time (from something Nudge noticed; never rerolled) and rhythm (from a friend's rhythm; can be rerolled). Like every bubble it needs an answer by the end of its day. |
 | Pips | Five marks per friend showing how the relationship is going. |
-| Streak | Days in a row with no strike (a broken promise or a rhythm that ran out). Two strikes a month are forgiven. |
+| Streak | Days in a row you cleared: every bubble on Today answered, everything due done. Two passes a month cover uncleared days. |
 | Promise | A bubble the user committed to. It always has a day. Only you, For a friend, or With a friend. Committing is what makes it a promise. |
 | Regular promise | A rule that makes one promise for each date it names ("Basketball, Tuesdays"). You keep the promise it made, never the rule. |
 | Rhythm | The longest the user wants to go without catching up with a friend. One per friend. |
-| Later | Every upcoming promise after today: a strip of days on Up Next and a running list by day. |
+| Today | The main page: today's bubbles, a strip of days, and the reminders tray. |
+| Coming up | Everything after today as one list: this week by day, later by month, then repeating promises. |
+| Reminder | Something to remember, for a plan or just for you. No stars, no streak. Lives in the reminders tray, never a bubble. |
 | Note | One per day, plain text, lines can be tagged to a friend. |
 | Star | Points earned only by completing a bubble. A running count. Nothing to spend them on yet. |
 | Ghost | A friend who is not on Nudge: a soft white shape instead of an avatar. |
 | Link | The connection between a user's friend entry and that friend's own account. |
 
-Retired words: idea, reach-out, pick, move, deck, catch-up nudge, timely nudge, kept in a row, weekly streak. They do not appear in new code. In code a regular promise is `regular`.
+Retired words: idea, reach-out, pick, move, deck, catch-up nudge, timely nudge, kept in a row, weekly streak, Up Next, Later, your nudge. They do not appear in new code. In code a regular promise is `regular`.
 
 ## Run and test
 
@@ -46,6 +48,12 @@ Retired words: idea, reach-out, pick, move, deck, catch-up nudge, timely nudge, 
 - Backend tests: TODO (Phase 1)
 - iOS tests: TODO (Phase 1)
 - Regenerate the Swift client from OpenAPI: TODO (Phase 1)
+
+## UI components (Q28)
+
+- Screens are built only from NudgeUI components and its tokens (colours, type, spacing, radii, glass, motion). No one-off colours, fonts or sizes in a screen.
+- NudgeUI stays small (about a dozen components). A new component, or a change to how one looks, goes in its own pull request with the code, a preview of every state, screenshots, and the matching component on the board's Components page. Tim approves it before anything uses it.
+- Snapshot tests lock each approved component. A failing snapshot is a design change: it needs the same approval, never a re-record to get green.
 
 ## Never
 
