@@ -34,6 +34,7 @@
 | Today | The main page: today's bubbles, a strip of days, and the reminders tray. |
 | Coming up | Everything after today as one list: this week by day, later by month, then repeating promises. |
 | Reminder | Something to remember, for a plan or just for you. No stars, no streak. Lives in the reminders tray, never a bubble. |
+| Action bar | The bar at the bottom of every tab ("Tell Nudge anything…"): type or speak to make a promise, reminder or note; later, act on existing ones. Was "Tell Nudge". In components, `ActionBar`. |
 | Note | One per day, plain text, lines can be tagged to a friend. |
 | Star | Points earned only by completing a bubble. A running count. Nothing to spend them on yet. |
 | Ghost | A friend who is not on Nudge: a soft white shape instead of an avatar. |
